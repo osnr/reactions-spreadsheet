@@ -1,15 +1,38 @@
 <html>
   <body>
+    <style>
+     table {
+         border-spacing: 0;
+     }
+     td {
+         border-top: 1px solid black;
+         border-left: 1px solid black;
+     }
+    </style>
     <script>
      const COLS = 10;
      const table = document.createElement('table');
 
-     for (let row = 0; row < 10; row++) {
+     const header = document.createElement('tr');
+     header.appendChild(document.createElement('th'));
+     for (let col = 1; col <= COLS; col++) {
+       const th = document.createElement('th');
+       th.innerText = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col];
+       header.appendChild(th);
+     }
+     table.appendChild(header);
+
+     for (let row = 1; row <= 10; row++) {
        const tr = document.createElement('tr');
 
-       for (let col = 0; col < COLS; col++) {
+       const th = document.createElement('th');
+       th.innerText = row;
+       tr.appendChild(th);
+
+       for (let col = 1; col <= COLS; col++) {
          const td = document.createElement('td');
-         td.innerText = `(${row},${col})`;
+         td.contentEditable = true;
+         td.innerText = ``;
          tr.appendChild(td);
        }
 
