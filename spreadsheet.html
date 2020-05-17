@@ -1,0 +1,22 @@
+<html>
+  <body>
+    <script>
+     const COLS = 10;
+     const table = document.createElement('table');
+
+     for (let row = 0; row < 10; row++) {
+       const tr = document.createElement('tr');
+
+       for (let col = 0; col < COLS; col++) {
+         const td = document.createElement('td');
+         td.innerText = `(${row},${col})`;
+         tr.appendChild(td);
+       }
+
+       table.appendChild(tr);
+     }
+
+     document.body.appendChild(table);
+    </script>
+  </body>
+</html>
