@@ -28,7 +28,7 @@
        console.log(x); return x;
      }
      function evaluate(code) {
-       return eval(log(code.replace(/(?:^|[^\w])([A-Z][1-9])(?:[^\w]|$)/gi, (match, cell) => {
+       return eval(log(code.replace(/(?<=^|[^\w])([A-Z][1-9])(?=[^\w]|$)/gi, (match, cell) => {
          return cells[cell].result;
        })));
      }
