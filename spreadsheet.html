@@ -22,7 +22,18 @@
      }
      table.appendChild(header);
 
-     for (let row = 1; row <= 10; row++) {
+     cells = {};
+
+     function log(x) {
+       console.log(x); return x;
+     }
+     function evaluate(code) {
+       return eval(log(code.replace(/(?:^|[^\w])([A-Z][1-9])(?:[^\w]|$)/gi, (match, cell) => {
+         return cells[cell].result;
+       })));
+     }
+     
+     for (let row = 1; row <= 9; row++) {
        const tr = document.createElement('tr');
 
        const th = document.createElement('th');
@@ -30,9 +41,26 @@
        tr.appendChild(th);
 
        for (let col = 1; col <= COLS; col++) {
+         const cell = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col] + row;
+
          const td = document.createElement('td');
          td.contentEditable = true;
          td.innerText = ``;
+
+         td.addEventListener('focusin', event => {
+           if (cells[cell]) {
+             td.innerText = cells[cell].program;
+           }
+         });
+         td.addEventListener('focusout', event => {
+           const text = td.innerText;
+           cells[cell] = {program: text, result: text};
+           if (text.startsWith('=')) {
+             const result = evaluate(text.substring(1));
+             td.innerText = result;
+             cells[cell].result = result;
+           }
+         });
          tr.appendChild(td);
        }
 
