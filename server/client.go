@@ -5,7 +5,6 @@
 package main
 
 import (
-	"bytes"
 	"log"
 	"net/http"
 	"time"
@@ -27,11 +26,6 @@ const (
 	maxMessageSize = 512
 )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
-
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -46,6 +40,13 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+}
+
+func (c *Client) wrapMessage(message []byte) []byte {
+	wrapped := append([]byte("{\"source\": \""), c.conn.RemoteAddr().String()...)
+	wrapped = append(wrapped, "\", \"data\": "...)
+	wrapped = append(wrapped, message...)
+	return append(wrapped, '}')
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -70,8 +71,9 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		// log.Printf("addr: %v", c.conn.RemoteAddr().String())
+		// log.Printf("wrap: %s", c.wrapMessage(message))
+		c.hub.broadcast <- c.wrapMessage(message)
 	}
 }
 
@@ -105,7 +107,6 @@ func (c *Client) writePump() {
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
 				w.Write(<-c.send)
 			}
 
