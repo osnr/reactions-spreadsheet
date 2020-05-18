@@ -35,11 +35,21 @@
 
      // networking engine
 
-     const fakeCursor = document.createElement('img');
-     fakeCursor.src = 'cursor@4x.png';
-     fakeCursor.width = 60/4; fakeCursor.height = 87/4;
+     const fakeCursor = document.createElement('i');
+
+     const fakeCursorImg = document.createElement('img');
+     fakeCursorImg.src = 'cursor@4x.png';
+     fakeCursorImg.width = 60/4; fakeCursorImg.height = 87/4;
+     fakeCursorImg.style.filter = 'invert(1)';
+     fakeCursorImg.style.mixBlendMode = 'difference';
+     fakeCursor.appendChild(fakeCursorImg);
+
+     fakeCursor.style.width = `${60/4}px`; fakeCursor.style.height = `${87/4}px`;
+     fakeCursor.style.pointerEvents = 'none';
      fakeCursor.style.position = 'absolute';
      fakeCursor.style.top = 0; fakeCursor.style.left = 0;
+     fakeCursor.style.maskImage = 'url(cursor@4x.png)';
+     fakeCursor.style.maskSize = `${60/4}px ${87/4}px`;
      document.body.appendChild(fakeCursor);
 
      conn = new WebSocket("ws://" + document.location.host + "/ws");
@@ -49,9 +59,11 @@
      conn.onmessage = function (evt) {
        const data = JSON.parse(evt.data);
        if (data.op === 'mouse') {
-         fakeCursor.style.transform = `translate(${data.x}px, ${data.y}px)`;
+         /* fakeCursor.style.transform = `translate(${data.x}px, ${data.y}px)`;*/
        }
      };
+
+     fakeCursor.style.backgroundColor = 'yellow';
 
      document.addEventListener('mousemove', event => {
        conn.send(JSON.stringify({op: 'mouse', x: event.pageX, y: event.pageY}));
