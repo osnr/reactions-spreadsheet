@@ -42,11 +42,12 @@ type Client struct {
 	send chan []byte
 }
 
-func (c *Client) wrapMessage(message []byte) []byte {
+func (c *Client) wrapMessage(message []byte) Message {
 	wrapped := append([]byte("{\"source\": \""), c.conn.RemoteAddr().String()...)
 	wrapped = append(wrapped, "\", \"data\": "...)
 	wrapped = append(wrapped, message...)
-	return append(wrapped, '}')
+	wrapped = append(wrapped, '}')
+	return Message{c, wrapped}
 }
 
 // readPump pumps messages from the websocket connection to the hub.
