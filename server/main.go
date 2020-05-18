@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var addr = flag.String("addr", ":9391", "http service address")
 var fs = http.FileServer(http.Dir("./static"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {

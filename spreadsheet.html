@@ -23,6 +23,22 @@
      // spreadsheet engine
 
      cells = {};
+     function onChange(cell, handler) {
+       cells[cell] = {program: "", result: "", handler};
+     }
+     function edit(cell, text, dontSend) {
+       const c = cells[cell];
+       c.program = undefined;
+       c.result = text;
+       if (text.startsWith('=')) {
+         c.program = text;
+         const result = evaluate(c.program.substring(1));
+         c.result = result;
+       }
+
+       if (!dontSend) conn.send(JSON.stringify({op: 'edit', cell, text}));
+       c.handler(c.result);
+     }
 
      function log(x) {
        console.log(x); return x;
@@ -78,6 +94,8 @@
        const {source, data} = JSON.parse(evt.data);
        if (data.op === 'mouse') {
          fakeCursor(source).move(data.x, data.y);
+       } else if (data.op === 'edit') {
+         edit(data.cell, data.text, true);
        }
      };
 
@@ -112,20 +130,18 @@
          const td = document.createElement('td');
          td.contentEditable = true;
          td.innerText = ``;
+         onChange(cell, res => {
+           td.innerText = res;
+         });
 
          td.addEventListener('focusin', event => {
-           if (cells[cell]) {
+           if (cells[cell].program) {
              td.innerText = cells[cell].program;
            }
          });
          td.addEventListener('focusout', event => {
            const text = td.innerText;
-           cells[cell] = {program: text, result: text};
-           if (text.startsWith('=')) {
-             const result = evaluate(text.substring(1));
-             td.innerText = result;
-             cells[cell].result = result;
-           }
+           edit(cell, text);
          });
          tr.appendChild(td);
        }
