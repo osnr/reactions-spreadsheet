@@ -37,6 +37,9 @@
 
      const fakeCursor = document.createElement('img');
      fakeCursor.src = 'cursor@4x.png';
+     fakeCursor.width = 60/4; fakeCursor.height = 87/4;
+     fakeCursor.style.position = 'absolute';
+     fakeCursor.style.top = 0; fakeCursor.style.left = 0;
      document.body.appendChild(fakeCursor);
 
      conn = new WebSocket("ws://" + document.location.host + "/ws");
@@ -46,12 +49,12 @@
      conn.onmessage = function (evt) {
        const data = JSON.parse(evt.data);
        if (data.op === 'mouse') {
-         
+         fakeCursor.style.transform = `translate(${data.x}px, ${data.y}px)`;
        }
      };
 
      document.addEventListener('mousemove', event => {
-       conn.send({op: 'mouse', x: event.pageX, y: event.pageY});
+       conn.send(JSON.stringify({op: 'mouse', x: event.pageX, y: event.pageY}));
      });
 
      // view layer
