@@ -137,10 +137,17 @@
      function log(x) {
        console.log(x); return x;
      }
+     const proxy = new Proxy({}, {
+       get: function(obj, prop) {
+         return cells[prop].result;
+       }
+     });
      function evaluate(code) {
-       return eval(log(code.replace(/(?<=^|[^\w])([A-Z][1-9])(?=[^\w]|$)/gi, (match, cell) => {
-         return cells[cell].result;
-       })));
+       return eval(`(function() {
+with (proxy) {
+  return ${code};
+}
+})()`);
      }
 
      // networking engine
