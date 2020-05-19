@@ -23,8 +23,8 @@
      // spreadsheet engine
 
      cells = {};
-     function onChange(cell, handler) {
-       cells[cell] = {program: "", result: "", handler};
+     function makeCell(cell, el, onChange) {
+       cells[cell] = {program: "", result: "", el, onChange};
      }
      function edit(cell, text, dontSend) {
        const c = cells[cell];
@@ -37,7 +37,7 @@
        }
 
        if (!dontSend) conn.send(JSON.stringify({op: 'edit', cell, text}));
-       c.handler(c.result);
+       c.onChange(c.result);
      }
 
      function log(x) {
@@ -69,17 +69,24 @@
          fakeCursor.style.pointerEvents = 'none';
          fakeCursor.style.position = 'absolute';
          fakeCursor.style.top = 0; fakeCursor.style.left = 0;
-         fakeCursor.style.maskImage = 'url(cursor@4x.png)';
-         fakeCursor.style.maskSize = `${60/4}px ${87/4}px`;
+         fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(cursor@4x.png)';
+         fakeCursor.style.maskSize = fakeCursor.style.webkitMaskSize = `${60/4}px ${87/4}px`;
          document.body.appendChild(fakeCursor);
 
          // FIXME: hash ident to color
          if (!colorHash) colorHash = new ColorHash();
-         fakeCursor.style.backgroundColor = colorHash.hex(ident.split("").reverse().join(""));
+         const color = colorHash.hex(ident.split("").reverse().join(""));
+         fakeCursor.style.backgroundColor = color;
 
          cursors[ident] = {
-           move(x, y) {
+           mouse({x, y}) {
              fakeCursor.style.transform = `translate(${x}px, ${y}px)`;
+           },
+           focusin({cell}) {
+             cells[cell].el.style.outline = '1px solid ' + color + 'a0';
+           },
+           focusout({cell}) {
+             cells[cell].el.style.outline = '';
            }
          };
        }
@@ -92,10 +99,10 @@
      };
      conn.onmessage = function (evt) {
        const {source, data} = JSON.parse(evt.data);
-       if (data.op === 'mouse') {
-         fakeCursor(source).move(data.x, data.y);
-       } else if (data.op === 'edit') {
+       if (data.op === 'edit') {
          edit(data.cell, data.text, true);
+       } else {
+         fakeCursor(source)[data.op](data);
        }
      };
 
@@ -130,16 +137,20 @@
          const td = document.createElement('td');
          td.contentEditable = true;
          td.innerText = ``;
-         onChange(cell, res => {
+         makeCell(cell, td, res => {
            td.innerText = res;
          });
 
          td.addEventListener('focusin', event => {
+           conn.send(JSON.stringify({op: 'focusin', cell}));
+
            if (cells[cell].program) {
              td.innerText = cells[cell].program;
            }
          });
          td.addEventListener('focusout', event => {
+           conn.send(JSON.stringify({op: 'focusout', cell}));
+
            const text = td.innerText;
            edit(cell, text);
          });
