@@ -19,7 +19,7 @@
      }
 
      #react-button {
-         margin-top: -0.37em;
+         margin-top: -0.5em;
          align-items: center; justify-content: center;
          cursor: pointer;
          height: 32px; width: 32px;
@@ -58,8 +58,9 @@
      }
 
      #react-chooser {
-         background: url(reacts/chooser.png);
-         background-size: 290px 49px;
+         /* background: url(reacts/chooser.png);
+            background-size: 290px 49px; */
+         background: white;
 
          position: absolute;
          top: calc(-27.5px - 100%);
@@ -73,6 +74,7 @@
          padding: 7px 5px;
          font-size: 0;
      }
+     #react-chooser button { margin: 0; padding: 0; border: 0; background: none; }
      #react-chooser img {
          cursor: pointer;
          display: inline-block;
@@ -97,13 +99,13 @@
 
       <div style="display: none" id="react-chooser">
         <div>
-          <img alt="❤" src="reacts/01-heart.png">
-          <img alt="😆" src="reacts/02-laugh.png">
-          <img alt="😮" src="reacts/03-wow.png">
-          <img alt="😢" src="reacts/04-sad.png">
-          <img alt="😠" src="reacts/05-angery.png">
-          <img alt="👍" src="reacts/06-thumbsup.png">
-          <img alt="👎" src="reacts/07-thumbsdown.png">
+          <button><img alt="❤" src="reacts/01-heart.png"></button>
+          <button><img alt="😆" src="reacts/02-laugh.png"></button>
+          <button><img alt="😮" src="reacts/03-wow.png"></button>
+          <button><img alt="😢" src="reacts/04-sad.png"></button>
+          <button><img alt="😠" src="reacts/05-angery.png"></button>
+          <button><img alt="👍" src="reacts/06-thumbsup.png"></button>
+          <button><img alt="👎" src="reacts/07-thumbsdown.png"></button>
         </div>
       </div>
 
@@ -269,12 +271,23 @@
        reactButtonContainer.style.top = rect.top;
        reactButtonContainer.style.left = rect.right;
      }
-     document.body.addEventListener('mousedown', event => {
+
+     const buttons = document.querySelectorAll('#react-chooser button');
+     for (let i = 0; i < buttons.length; i++) {
+       const button = buttons[i];
+       button.addEventListener('click', event => {
+         console.log('hi');
+       });
+     }
+
+     document.body.addEventListener('mouseup', event => {
+       if (event.target.tagName === "IMG") return;
+
        locked = false;
        reactChooser.style.display = 'none';
 
-       if (event.target.tagName == "TD") tdMouseEnter(event.target);
-     });
+       if (event.target.tagName === "TD") tdMouseEnter(event.target);
+     }, true);
 
      const reactButton = document.getElementById('react-button');
      const reactChooser = document.getElementById('react-chooser');
