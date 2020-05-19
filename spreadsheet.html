@@ -3,6 +3,8 @@
     <style>
      body {
          font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Arial, sans-serif;
+         text-rendering: optimizeLegibility;
+         -moz-osx-font-smoothing: grayscale;
          font-size: 15px;
          line-height: 20.1px;
      }
@@ -16,8 +18,11 @@
          border-top: 1px solid rgb(241, 240, 240);
          border-left: 1px solid rgb(241, 240, 240);
          min-width: 60px;
+         position: relative;
+         height: 100%;
      }
 
+     #react-button-container { z-index: 10; }
      #react-button {
          margin-top: -0.5em;
          align-items: center; justify-content: center;
@@ -117,8 +122,8 @@
      // spreadsheet engine
 
      cells = {};
-     function makeCell(cell, el, onChange) {
-       cells[cell] = {program: "", result: "", el, onChange};
+     function makeCell(cell, onChange, onReact) {
+       cells[cell] = {program: "", result: "", reactions: [], onChange, onReact};
      }
      function edit(cell, text, dontSend) {
        const c = cells[cell];
@@ -132,6 +137,13 @@
 
        if (!dontSend) conn.send(JSON.stringify({op: 'edit', cell, text}));
        c.onChange(c.result);
+     }
+     function react(cell, reaction, dontSend) {
+       const c = cells[cell];
+       c.reactions.push(reaction);
+
+       if (!dontSend) conn.send(JSON.stringify({op: 'react', cell, reaction}));
+       c.onReact(c.reactions);
      }
 
      function log(x) {
@@ -200,6 +212,8 @@ with (proxy) {
        const {source, data} = JSON.parse(evt.data);
        if (data.op === 'edit') {
          edit(data.cell, data.text, true);
+       } else if (data.op === 'react') {
+         react(data.cell, data.reaction, true);
        } else {
          fakeCursor(source)[data.op](data);
        }
@@ -234,26 +248,72 @@ with (proxy) {
          const cell = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col] + row;
 
          const td = document.createElement('td');
-         td.contentEditable = true;
-         td.innerText = ``;
-         makeCell(cell, td, res => {
-           td.innerText = res;
+
+         const body = document.createElement('div');
+         body.style.width = '100%'; body.style.height = '100%';
+         body.contentEditable = true;
+         body.innerText = ``;
+         makeCell(cell, res => { // onChange
+           body.innerText = res;
+         }, reactions => { // onReact
+           const rv = td.reactionsView = td.reactionsView || (function() {
+             const rv = document.createElement('div');
+             rv.style.alignItems = 'center';
+             rv.style.background = '#fff';
+             rv.style.borderRadius = '10px';
+             rv.style.boxShadow = '0 2px 4px rgba(0, 0, 0, .15)';
+             rv.style.color = '#626262';
+             rv.style.justifyContent = 'center';
+             rv.style.whiteSpace = 'nowrap';
+             rv.style.position = 'absolute';
+             rv.style.zIndex = 5;
+             rv.style.top = 'calc(50%)';
+             rv.style.left = 'calc(100% - 32px)';
+             rv.style.height = '20px';
+             /* rv.style.backgroundImage = 'url(reacts/reactions-viewer.png)';
+              * rv.style.backgroundSize = '48px 20px';*/
+             td.appendChild(rv);
+             return rv;
+           })();
+           rv.textContent = ''; // destroy all previous
+           for (let i = 0; i < reactions.length; i++) {
+             const r = document.createElement('span');
+             r.style.display = 'inline-block';
+             r.style.marginLeft = i === 0 ? '2px' : '0'; r.style.marginTop = '3px';
+             r.style.height = '20px';
+             r.style.fontSize = '14px';
+             const ri = document.createElement('img');
+             ri.style.margin = '0 1px 0 1px';
+             ri.style.height = '1em';
+             ri.src = 'reacts/'+reactions[i]+'.png';
+             r.appendChild(ri);
+             rv.appendChild(r);
+           }
+           const rcount = document.createElement('span');
+           rcount.style.fontSize = '12px'; rcount.style.fontWeight = '600';
+           rcount.style.padding = '4px';
+           rcount.style.position = 'relative'; rcount.style.top = '-2.5px'; rcount.style.left = '-0.5px';
+           rcount.style.color = 'rgb(102, 153, 204)';
+           rcount.innerText = reactions.length;
+           rv.appendChild(rcount);
          });
 
-         td.addEventListener('focusin', event => {
+         body.addEventListener('focusin', event => {
            conn.send(JSON.stringify({op: 'focusin', cell}));
 
            if (cells[cell].program) {
-             td.innerText = cells[cell].program;
+             body.innerText = cells[cell].program;
            }
          });
-         td.addEventListener('focusout', event => {
+         body.addEventListener('focusout', event => {
            conn.send(JSON.stringify({op: 'focusout', cell}));
 
-           const text = td.innerText;
+           const text = body.innerText;
            edit(cell, text);
          });
-         td.addEventListener('mouseenter', event => { tdMouseEnter(td); });
+         body.addEventListener('mouseenter', event => { tdMouseEnter(cell, td); });
+
+         td.appendChild(body);
          tr.appendChild(td);
        }
 
@@ -264,11 +324,14 @@ with (proxy) {
 
      // react
 
+     let reactCell;
      let locked;
 
      const reactButtonContainer = document.getElementById('react-button-container');
-     function tdMouseEnter(td) {
+     function tdMouseEnter(cell, td) {
        if (locked) return;
+
+       reactCell = cell;
 
        reactButtonContainer.style.position = 'absolute'
        reactButtonContainer.style.display = '';
@@ -280,8 +343,9 @@ with (proxy) {
      const buttons = document.querySelectorAll('#react-chooser button');
      for (let i = 0; i < buttons.length; i++) {
        const button = buttons[i];
+       const reaction = button.firstElementChild.src.match('/([^/\.]+)\.png')[1];
        button.addEventListener('click', event => {
-         console.log('hi');
+         react(reactCell, reaction);
        });
      }
 
