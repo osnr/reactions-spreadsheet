@@ -60,30 +60,20 @@
      #react-chooser {
          background: url(reacts/chooser.png);
          background-size: 290px 49px;
-         width: 290px; height: 49px;
-
-         opacity: 50%;
 
          position: absolute;
          top: calc(-27.5px - 100%);
          left: calc(50% - 145px);
-     }
-     #react-actual-chooser {
-         position: absolute;
-         top: 0;
-         left: 0;
-         outline: 1px solid blue;
-         opacity: 0.4;
 
          border: 0;
          border-radius: 20px;
          box-shadow: 0 2px 4px 1px rgba(0, 0, 0, .1);
-         height: 44px;
+         width: 280px; height: 30px;
 
          padding: 7px 5px;
          font-size: 0;
      }
-     #react-actual-chooser img {
+     #react-chooser img {
          cursor: pointer;
          display: inline-block;
          padding: 0 4px;
@@ -93,9 +83,11 @@
 
          transition: all .2s ease-in-out;
          vertical-align: middle;
-         pointer-events: none;
          border: 0;
-         /* margin: 0 1px 0 1px; */
+     }
+     #react-chooser img:hover {
+         transform-origin: bottom;
+         transform: scale(1.3);
      }
     </style>
     <div style="display: none" id="react-button-container">
@@ -104,16 +96,14 @@
       </button>
 
       <div style="display: none" id="react-chooser">
-        <div id="react-actual-chooser">
-          <div>
-            <img alt="❤" src="reacts/01-heart.png">
-            <img alt="😆" src="reacts/02-laugh.png">
-            <img alt="😮" src="reacts/03-wow.png">
-            <img alt="😢" src="reacts/04-sad.png">
-            <img alt="😠" src="reacts/05-angery.png">
-            <img alt="👍" src="reacts/06-thumbsup.png">
-            <img alt="👎" src="reacts/07-thumbsdown.png">
-          </div>
+        <div>
+          <img alt="❤" src="reacts/01-heart.png">
+          <img alt="😆" src="reacts/02-laugh.png">
+          <img alt="😮" src="reacts/03-wow.png">
+          <img alt="😢" src="reacts/04-sad.png">
+          <img alt="😠" src="reacts/05-angery.png">
+          <img alt="👍" src="reacts/06-thumbsup.png">
+          <img alt="👎" src="reacts/07-thumbsdown.png">
         </div>
       </div>
 
