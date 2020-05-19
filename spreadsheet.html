@@ -123,21 +123,34 @@
 
      cells = {};
      proxy = {};
+     let currentEvaluationCell;
      function makeCell(cell, onChange, onReact) {
-       cells[cell] = {program: "", result: "", reactions: [], onChange, onReact};
+       cells[cell] = {program: "", result: "", affects: {}, reactions: [], onChange, onReact};
 
        Object.defineProperty(proxy, cell, {
-         get() { return cells[cell].result; }
+         get() { cells[cell].affects[currentEvaluationCell] = true; return cells[cell].result; }
        });
      }
      function edit(cell, text, dontSend) {
        const c = cells[cell];
-       c.program = undefined;
-       c.result = text;
+
        if (text.startsWith('=')) {
          c.program = text;
+
+         currentEvaluationCell = cell;
          const result = evaluate(c.program.substring(1));
+
          c.result = result;
+       } else {
+         c.program = undefined;
+         c.result = text;
+         if (c.result !== "" && !isNaN(c.result)) {
+           c.result = +c.result;
+         }
+       }
+       
+       for (let affectedCell in c.affects) {
+         edit(affectedCell, cells[affectedCell].program || cells[affectedCell].result, true);
        }
 
        if (!dontSend) conn.send(JSON.stringify({op: 'edit', cell, text}));
@@ -357,7 +370,7 @@ with (proxy) {
        locked = false;
        reactChooser.style.display = 'none';
 
-       if (event.target.tagName === "TD") tdMouseEnter(event.target);
+       // FIXME: if (event.target.tagName === "TD") tdMouseEnter(event.target);
      }, true);
 
      const reactButton = document.getElementById('react-button');
