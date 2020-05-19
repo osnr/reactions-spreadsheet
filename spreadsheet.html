@@ -122,8 +122,13 @@
      // spreadsheet engine
 
      cells = {};
+     proxy = {};
      function makeCell(cell, onChange, onReact) {
        cells[cell] = {program: "", result: "", reactions: [], onChange, onReact};
+
+       Object.defineProperty(proxy, cell, {
+         get() { return cells[cell].result; }
+       });
      }
      function edit(cell, text, dontSend) {
        const c = cells[cell];
@@ -150,10 +155,6 @@
        console.log(x); return x;
      }
      function evaluate(code) {
-       // FIXME: hack
-       const proxy = {};
-       for (let cell in cells) { proxy[cell] = cells[cell].result; }
-
        return eval(`(function() {
 with (proxy) {
   return ${code};
@@ -179,6 +180,7 @@ with (proxy) {
 
          fakeCursor.style.width = `${60/4}px`; fakeCursor.style.height = `${87/4}px`;
          fakeCursor.style.pointerEvents = 'none';
+         fakeCursor.style.zIndex = '999';
          fakeCursor.style.position = 'absolute';
          fakeCursor.style.top = 0; fakeCursor.style.left = 0;
          fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(cursor@4x.png)';
