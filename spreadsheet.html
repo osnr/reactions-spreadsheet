@@ -6,9 +6,8 @@
          font-size: 15px;
          line-height: 20.1px;
      }
-     table {
-         border-spacing: 0;
-     }
+
+     table { border-spacing: 0; }
      th {
          background-color: rgb(241, 240, 240);
          min-width: 30px;
@@ -18,6 +17,7 @@
          border-left: 1px solid rgb(241, 240, 240);
          min-width: 60px;
      }
+
      #react-button {
          margin-top: -0.5em;
          align-items: center; justify-content: center;
@@ -26,9 +26,10 @@
          border-radius: 99px; box-sizing: border-box;
          background: none; border: none; padding: 0;
      }
-     #react-button:hover {
-         background-color: rgba(0, 0, 0, .04);
-     }
+     #react-button:hover { background-color: rgba(0, 0, 0, .04); }
+
+     #react-button path { fill: rgba(0, 0, 0, 0.34); }
+     #react-button:hover path { fill: rgba(0, 0, 0, 1); }
 
      #react-tooltip {
          position: absolute;
@@ -55,11 +56,25 @@
      #react-button:hover ~ #react-tooltip, #react-button:hover ~ #react-tooltip-arrow {
          visibility: visible;
      }
+
+     #react-chooser {
+         background: url(reacts/chooser.png);
+         background-size: 290px 49px;
+         width: 290px; height: 49px;
+
+         opacity: 50%;
+
+         position: absolute;
+         top: calc(-27.5px - 100%);
+         left: calc(50% - 145px);
+     }
     </style>
     <div style="display: none" id="react-button-container">
       <button id="react-button">
-        <svg height="22px" width="22px" viewBox="0 0 36 36"><g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1"><polygon points="0 36 36 36 36 0 0 0"></polygon><path d="M14.4951,17.5 C13.5576,17.5 12.9951,16.75 12.9951,15.5 C12.9951,14.25 13.5576,13.5 14.4951,13.5 C15.4326,13.5 15.9951,14.25 15.9951,15.5 C15.9951,16.75 15.4326,17.5 14.4951,17.5 M21.4951,17.5 C20.5576,17.5 19.9951,16.75 19.9951,15.5 C19.9951,14.25 20.5576,13.5 21.4951,13.5 C22.4326,13.5 22.9951,14.25 22.9951,15.5 C22.9951,16.75 22.4326,17.5 21.4951,17.5 M18.0071,25.0055 C15.7176,25.0055 13.5461,23.9185 12.1981,22.0985 C11.8691,21.6545 11.9626,21.028 12.4061,20.6985 C12.8491,20.369 13.4756,20.4625 13.8041,20.9065 C14.7766,22.2195 16.3481,23.004 18.0071,23.004 C19.6666,23.004 21.2376,22.2195 22.2101,20.9065 C22.5386,20.4625 23.1656,20.3695 23.6086,20.698 C24.0516,21.0275 24.1451,21.6545 23.8166,22.0985 C22.4686,23.9185 20.2971,25.0055 18.0071,25.0055 M18.0001,8 C12.4771,8 8.0001,12.477 8.0001,18 C8.0001,23.523 12.4771,28 18.0001,28 C23.5231,28 28.0001,23.523 28.0001,18 C28.0001,12.477 23.5231,8 18.0001,8 M18.0001,30 C11.3726,30 6.0001,24.6275 6.0001,18 C6.0001,11.3725 11.3726,6 18.0001,6 C24.6276,6 30.0001,11.3725 30.0001,18 C30.0001,24.6275 24.6276,30 18.0001,30" fill="rgba(0, 0, 0, 0.34)"></path></g></svg>
+        <svg height="22px" width="22px" viewBox="0 0 36 36"><g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1"><polygon points="0 36 36 36 36 0 0 0"></polygon><path d="M14.4951,17.5 C13.5576,17.5 12.9951,16.75 12.9951,15.5 C12.9951,14.25 13.5576,13.5 14.4951,13.5 C15.4326,13.5 15.9951,14.25 15.9951,15.5 C15.9951,16.75 15.4326,17.5 14.4951,17.5 M21.4951,17.5 C20.5576,17.5 19.9951,16.75 19.9951,15.5 C19.9951,14.25 20.5576,13.5 21.4951,13.5 C22.4326,13.5 22.9951,14.25 22.9951,15.5 C22.9951,16.75 22.4326,17.5 21.4951,17.5 M18.0071,25.0055 C15.7176,25.0055 13.5461,23.9185 12.1981,22.0985 C11.8691,21.6545 11.9626,21.028 12.4061,20.6985 C12.8491,20.369 13.4756,20.4625 13.8041,20.9065 C14.7766,22.2195 16.3481,23.004 18.0071,23.004 C19.6666,23.004 21.2376,22.2195 22.2101,20.9065 C22.5386,20.4625 23.1656,20.3695 23.6086,20.698 C24.0516,21.0275 24.1451,21.6545 23.8166,22.0985 C22.4686,23.9185 20.2971,25.0055 18.0071,25.0055 M18.0001,8 C12.4771,8 8.0001,12.477 8.0001,18 C8.0001,23.523 12.4771,28 18.0001,28 C23.5231,28 28.0001,23.523 28.0001,18 C28.0001,12.477 23.5231,8 18.0001,8 M18.0001,30 C11.3726,30 6.0001,24.6275 6.0001,18 C6.0001,11.3725 11.3726,6 18.0001,6 C24.6276,6 30.0001,11.3725 30.0001,18 C30.0001,24.6275 24.6276,30 18.0001,30" fill=""></path></g></svg>
       </button>
+
+      <div style="display: none" id="react-chooser"></div>
 
       <div id="react-tooltip">React</div>
       <img id="react-tooltip-arrow" src="reacts/arrow.png" width="8" height="4">
@@ -216,6 +231,13 @@
      document.body.appendChild(table);
 
      const reactButtonContainer = document.getElementById('react-button-container');
+
+     const reactButton = document.getElementById('react-button');
+     const reactChooser = document.getElementById('react-chooser');
+     reactButton.addEventListener('click', event => {
+       console.log('hi');
+       reactChooser.style.display = '';
+     });
     </script>
     <script src="color-hash.js"></script>
   </body>
