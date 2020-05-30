@@ -25,10 +25,11 @@
      td.highlight {
          outline: 1px dashed black;
      }
+     td > div { min-height: 20px; }
 
      #react-button-container { z-index: 10; }
      #react-button {
-         margin-top: -0.5em;
+         margin-top: -0.35em;
          align-items: center; justify-content: center;
          cursor: pointer;
          height: 32px; width: 32px;
@@ -413,11 +414,12 @@ with (proxy) {
      }
 
      document.body.addEventListener('mouseup', event => {
-       if (event.target.tagName === "IMG") return;
+       if (event.target.tagName === "IMG") { // FIXME: bad hack
+         setTimeout(dismissReactChooser, 150);
+         return;
+       }
 
-       locked = false;
-       reactChooser.style.display = 'none';
-
+       dismissReactChooser();
        // FIXME: if (event.target.tagName === "TD") tdMouseEnter(event.target);
      }, true);
 
@@ -427,6 +429,10 @@ with (proxy) {
        locked = true;
        reactChooser.style.display = '';
      });
+     function dismissReactChooser() {
+       locked = false;
+       reactChooser.style.display = 'none';
+     }
     </script>
     <script src="color-hash.js"></script>
   </body>
