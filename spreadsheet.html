@@ -20,6 +20,10 @@
          min-width: 60px;
          position: relative;
          height: 100%;
+         outline-offset: -1px;
+     }
+     td.highlight {
+         outline: 1px dashed black;
      }
 
      #react-button-container { z-index: 10; }
@@ -124,11 +128,15 @@
      cells = {};
      proxy = {};
      let currentEvaluationCell;
-     function makeCell(cell, onChange, onReact) {
-       cells[cell] = {program: "", result: "", affects: {}, reactions: [], onChange, onReact};
+     function makeCell(cell, el, onChange, onReact) {
+       cells[cell] = {program: "", result: "", affects: {}, reactions: [], el, onChange, onReact};
 
        Object.defineProperty(proxy, cell, {
-         get() { cells[cell].affects[currentEvaluationCell] = true; return cells[cell].result; }
+         get() {
+           cells[cell].affects[currentEvaluationCell] = true;
+           const result = cells[cell].result;
+           if (result === '') return 0; else return result;
+         }
        });
      }
      function edit(cell, text, dontSend) {
@@ -144,7 +152,7 @@
        } else {
          c.program = undefined;
          c.result = text;
-         if (c.result !== "" && !isNaN(c.result)) {
+         if (c.result !== "" && c.result !== "\n" && !isNaN(c.result)) {
            c.result = +c.result;
          }
        }
@@ -167,8 +175,9 @@
      function log(x) {
        console.log(x); return x;
      }
+     const eval_ = eval;
      function evaluate(code) {
-       return eval(`(function() {
+       return eval_(`(function() {
 with (proxy) {
   return ${code};
 }
@@ -240,6 +249,7 @@ with (proxy) {
 
      // view layer
 
+     const ROWS = 9;
      const COLS = 10;
      const table = document.createElement('table');
 
@@ -251,8 +261,8 @@ with (proxy) {
        header.appendChild(th);
      }
      table.appendChild(header);
-     
-     for (let row = 1; row <= 9; row++) {
+
+     for (let row = 1; row <= ROWS; row++) {
        const tr = document.createElement('tr');
 
        const th = document.createElement('th');
@@ -268,7 +278,7 @@ with (proxy) {
          body.style.width = '100%'; body.style.height = '100%';
          body.contentEditable = true;
          body.innerText = ``;
-         makeCell(cell, res => { // onChange
+         makeCell(cell, td, res => { // onChange
            body.innerText = res;
          }, reactions => { // onReact
            const rv = td.reactionsView = td.reactionsView || (function() {
@@ -320,7 +330,30 @@ with (proxy) {
              body.innerText = cells[cell].program;
            }
          });
+         body.addEventListener('keydown', event => {
+           if (event.key !== 'Shift') { highlight(''); }
+           if (event.key === 'Enter' && !event.shiftKey) {
+             cells["_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col] + (row + 1)].el.firstElementChild.focus();
+             event.preventDefault();
+             return false;
+           }
+
+           const text = body.innerText;
+           if (text[0] === '=') {
+             const prev = text[window.getSelection().anchorOffset - 1];
+             if (event.key.length === 1 && event.key >= 'A' && event.key <= 'Z' && prev.match(/[^\w]/)) {
+               highlight(event.key);
+             } else if (event.key.length === 1 && event.key >= '1' && event.key <= '9' && prev.match(/[A-Z]/)) {
+               highlight(prev + event.key);
+             } else if (event.key === 'ArrowLeft') { // FIXME: get neighbor
+             } else if (event.key === 'ArrowRight') {
+             } else if (event.key === 'ArrowUp') {
+             } else if (event.key === 'ArrowDown') {
+             }
+           }
+         });
          body.addEventListener('focusout', event => {
+           highlight('');
            conn.send(JSON.stringify({op: 'focusout', cell}));
 
            const text = body.innerText;
@@ -336,6 +369,21 @@ with (proxy) {
      }
 
      document.body.appendChild(table);
+
+     function highlight(colOrCell) {
+       Array.from(document.getElementsByClassName('highlight'))
+            .forEach(el => el.classList.remove('highlight'));
+
+       if (colOrCell.length === 1) {
+         const col = colOrCell;
+         for (let row = 1; row <= ROWS; row++) {
+           cells[col+row].el.classList.add('highlight');
+         }
+       } else if (colOrCell.length === 2) {
+         const cell = colOrCell;
+         cells[cell].el.classList.add('highlight');
+       } else if (colOrCell.length >= 3) { throw new Error('invalid highlight'); }
+     }
 
      // react
 
