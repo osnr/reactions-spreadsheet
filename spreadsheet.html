@@ -189,7 +189,27 @@ with (proxy) {
 
      const cursors = {};
 
-     let colorHash;
+     function colorHash(ident) {
+       function bkdrHash(str) {
+         var seed = 131;
+         var seed2 = 137;
+         var hash = 0;
+         // make hash more sensitive for short string like 'a', 'b', 'c'
+         str += 'x';
+         // Note: Number.MAX_SAFE_INTEGER equals 9007199254740991
+         var MAX_SAFE_INTEGER = parseInt(9007199254740991 / seed2);
+         for(var i = 0; i < str.length; i++) {
+           if(hash > MAX_SAFE_INTEGER) {
+             hash = parseInt(hash / seed2);
+           }
+           hash = hash * seed + str.charCodeAt(i);
+         }
+         return hash;
+       };
+       // FIXME: more colors? smarter generation? (or just identify them with names too.)
+       const colors = ["#fce94f", "#fcaf3e", "#e9b96e", "#8ae234", "#729fcf", "#ad7fa8", "#ef2929"];
+       return colors[bkdrHash(ident.split("").reverse().join("")) % colors.length];
+     }
      function fakeCursor(ident) {
        if (!cursors[ident]) {
          const fakeCursor = document.createElement('i');
@@ -210,8 +230,7 @@ with (proxy) {
          fakeCursor.style.maskSize = fakeCursor.style.webkitMaskSize = `${60/4}px ${87/4}px`;
          document.body.appendChild(fakeCursor);
 
-         if (!colorHash) colorHash = new ColorHash({saturation: 0.9});
-         const color = colorHash.hex(ident.split("").reverse().join(""));
+         const color = colorHash(ident);
          fakeCursor.style.backgroundColor = color;
 
          cursors[ident] = {
@@ -434,6 +453,5 @@ with (proxy) {
        reactChooser.style.display = 'none';
      }
     </script>
-    <script src="color-hash.js"></script>
   </body>
 </html>
