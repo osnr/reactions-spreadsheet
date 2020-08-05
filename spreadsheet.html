@@ -125,71 +125,135 @@
 
     <script>
      // spreadsheet engine
+     Spreadsheet = {
+       Cells: {},
+       Proxy: {},
+       MakeCell(cell, el, onChange, onReact) {
+         this.Cells[cell] = {program: "", result: "", affects: {}, reactions: [], el, onChange, onReact};
 
-     cells = {};
-     proxy = {};
-     let currentEvaluationCell;
-     function makeCell(cell, el, onChange, onReact) {
-       cells[cell] = {program: "", result: "", affects: {}, reactions: [], el, onChange, onReact};
+         Object.defineProperty(this.Proxy, cell, {
+           get: () => {
+             this.Cells[cell].affects[CurrentEvaluationCell] = true;
+             const result = this.Cells[cell].result;
+             if (result === '') return 0; else return result;
+           }
+         });
+       },
 
-       Object.defineProperty(proxy, cell, {
-         get() {
-           cells[cell].affects[currentEvaluationCell] = true;
-           const result = cells[cell].result;
-           if (result === '') return 0; else return result;
+       CurrentEvaluationCell: undefined,
+       Edit(cell, text, dontSend) {
+         const c = this.Cells[cell];
+
+         if (text.startsWith('=')) {
+           c.program = text;
+
+           CurrentEvaluationCell = cell;
+           const result = this.Evaluate(c.program.substring(1));
+
+           c.result = result;
+         } else {
+           c.program = undefined;
+           c.result = text;
+           if (c.result !== "" && c.result !== "\n" && !isNaN(c.result)) {
+             c.result = +c.result;
+           }
          }
-       });
-     }
-     function edit(cell, text, dontSend) {
-       const c = cells[cell];
-
-       if (text.startsWith('=')) {
-         c.program = text;
-
-         currentEvaluationCell = cell;
-         const result = evaluate(c.program.substring(1));
-
-         c.result = result;
-       } else {
-         c.program = undefined;
-         c.result = text;
-         if (c.result !== "" && c.result !== "\n" && !isNaN(c.result)) {
-           c.result = +c.result;
+         
+         for (let affectedCell in c.affects) {
+           this.Edit(affectedCell, this.Cells[affectedCell].program || this.Cells[affectedCell].result, true);
          }
-       }
-       
-       for (let affectedCell in c.affects) {
-         edit(affectedCell, cells[affectedCell].program || cells[affectedCell].result, true);
-       }
+         
+         if (!dontSend) Network.Send('edit', {cell, text});
+         c.onChange(c.result);
+       },
 
-       if (!dontSend) conn.send(JSON.stringify({op: 'edit', cell, text}));
-       c.onChange(c.result);
-     }
-     function react(cell, reaction, dontSend) {
-       const c = cells[cell];
-       c.reactions.push(reaction);
+       React(cell, reaction, dontSend) {
+         const c = this.Cells[cell];
+         c.reactions.push(reaction);
 
-       if (!dontSend) conn.send(JSON.stringify({op: 'react', cell, reaction}));
-       c.onReact(c.reactions);
-     }
+         if (!dontSend) Network.Send('react', {cell, reaction});
+         c.onReact(c.reactions);
+       },
 
-     function log(x) {
-       console.log(x); return x;
-     }
-     const eval_ = eval;
-     function evaluate(code) {
-       return eval_(`(function() {
-with (proxy) {
+       Eval_: eval,
+       Evaluate(code) {
+         return this.Eval_(`(function() {
+with (Spreadsheet.Proxy) {
   return ${code};
 }
 })()`);
+       }
      }
 
-     // networking engine
+     function Log(x) { // utility fn.
+       console.log(x); return x;
+     }
 
-     const cursors = {};
+     // networking/multiuser engine
+     Network = {
+       Connection: (function() {
+         const conn = new WebSocket("ws://" + document.location.host + "/ws");
+         conn.onclose = function (evt) {
+           alert("Connection closed.");
+         };
+         conn.onmessage = function (evt) {
+           const {source, data} = JSON.parse(evt.data);
+           if (data.op === 'edit') {
+             Spreadsheet.Edit(data.cell, data.text, true);
+           } else if (data.op === 'react') {
+             Spreadsheet.React(data.cell, data.reaction, true);
+           } else {
+             Network.FakeCursor(source)[data.op](data);
+           }
+         };
+         return conn;
+       })(),
 
-     function colorHash(ident) {
+       Send(op, data) {
+         this.Connection.send(JSON.stringify({op, ...data}));
+       },
+
+       FakeCursors: {},
+       FakeCursor(ident) {
+         if (!this.FakeCursors[ident]) {
+           const fakeCursor = document.createElement('i');
+
+           const fakeCursorImg = document.createElement('img');
+           fakeCursorImg.src = 'cursor@4x.png';
+           fakeCursorImg.width = 60/4; fakeCursorImg.height = 87/4;
+           fakeCursorImg.style.filter = 'invert(1)';
+           fakeCursorImg.style.mixBlendMode = 'darken';
+           fakeCursor.appendChild(fakeCursorImg);
+
+           fakeCursor.style.width = `${60/4}px`; fakeCursor.style.height = `${87/4}px`;
+           fakeCursor.style.pointerEvents = 'none';
+           fakeCursor.style.zIndex = '999';
+           fakeCursor.style.position = 'absolute';
+           fakeCursor.style.top = 0; fakeCursor.style.left = 0;
+           fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(cursor@4x.png)';
+           fakeCursor.style.maskSize = fakeCursor.style.webkitMaskSize = `${60/4}px ${87/4}px`;
+           document.body.appendChild(fakeCursor);
+
+           const color = ColorHash(ident);
+           fakeCursor.style.backgroundColor = color;
+
+           this.FakeCursors[ident] = {
+             mouse({x, y}) {
+               fakeCursor.style.transform = `translate(${x}px, ${y}px)`;
+             },
+             focusin({cell}) {
+               Spreadsheet.Cells[cell].el.style.outline = '1px solid ' + color + 'a0';
+             },
+             focusout({cell}) {
+               Spreadsheet.Cells[cell].el.style.outline = '';
+             }
+           };
+         }
+         return this.FakeCursors[ident];
+       }
+     };
+
+     function ColorHash(ident) { // utility fn.
        function bkdrHash(str) {
          var seed = 131;
          var seed2 = 137;
@@ -210,61 +274,9 @@ with (proxy) {
        const colors = ["#fce94f", "#fcaf3e", "#e9b96e", "#8ae234", "#729fcf", "#ad7fa8", "#ef2929"];
        return colors[bkdrHash(ident.split("").reverse().join("")) % colors.length];
      }
-     function fakeCursor(ident) {
-       if (!cursors[ident]) {
-         const fakeCursor = document.createElement('i');
-
-         const fakeCursorImg = document.createElement('img');
-         fakeCursorImg.src = 'cursor@4x.png';
-         fakeCursorImg.width = 60/4; fakeCursorImg.height = 87/4;
-         fakeCursorImg.style.filter = 'invert(1)';
-         fakeCursorImg.style.mixBlendMode = 'darken';
-         fakeCursor.appendChild(fakeCursorImg);
-
-         fakeCursor.style.width = `${60/4}px`; fakeCursor.style.height = `${87/4}px`;
-         fakeCursor.style.pointerEvents = 'none';
-         fakeCursor.style.zIndex = '999';
-         fakeCursor.style.position = 'absolute';
-         fakeCursor.style.top = 0; fakeCursor.style.left = 0;
-         fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(cursor@4x.png)';
-         fakeCursor.style.maskSize = fakeCursor.style.webkitMaskSize = `${60/4}px ${87/4}px`;
-         document.body.appendChild(fakeCursor);
-
-         const color = colorHash(ident);
-         fakeCursor.style.backgroundColor = color;
-
-         cursors[ident] = {
-           mouse({x, y}) {
-             fakeCursor.style.transform = `translate(${x}px, ${y}px)`;
-           },
-           focusin({cell}) {
-             cells[cell].el.style.outline = '1px solid ' + color + 'a0';
-           },
-           focusout({cell}) {
-             cells[cell].el.style.outline = '';
-           }
-         };
-       }
-       return cursors[ident];
-     }
-
-     conn = new WebSocket("ws://" + document.location.host + "/ws");
-     conn.onclose = function (evt) {
-       alert("Connection closed.");
-     };
-     conn.onmessage = function (evt) {
-       const {source, data} = JSON.parse(evt.data);
-       if (data.op === 'edit') {
-         edit(data.cell, data.text, true);
-       } else if (data.op === 'react') {
-         react(data.cell, data.reaction, true);
-       } else {
-         fakeCursor(source)[data.op](data);
-       }
-     };
 
      document.addEventListener('mousemove', event => {
-       conn.send(JSON.stringify({op: 'mouse', x: event.pageX, y: event.pageY}));
+       Network.Send('mouse', {x: event.pageX, y: event.pageY});
      });
 
      // view layer
@@ -298,7 +310,7 @@ with (proxy) {
          body.style.width = '100%'; body.style.height = '100%';
          body.contentEditable = true;
          body.innerText = ``;
-         makeCell(cell, td, res => { // onChange
+         Spreadsheet.MakeCell(cell, td, res => { // onChange
            body.innerText = res;
          }, reactions => { // onReact
            const rv = td.reactionsView = td.reactionsView || (function() {
@@ -344,16 +356,16 @@ with (proxy) {
          });
 
          body.addEventListener('focusin', event => {
-           conn.send(JSON.stringify({op: 'focusin', cell}));
+           Network.Send('focusin', {cell});
 
-           if (cells[cell].program) {
-             body.innerText = cells[cell].program;
+           if (Spreadsheet.Cells[cell].program) {
+             body.innerText = Spreadsheet.Cells[cell].program;
            }
          });
          body.addEventListener('keydown', event => {
            if (event.key !== 'Shift') { highlight(''); }
            if (event.key === 'Enter' && !event.shiftKey) {
-             cells["_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col] + (row + 1)].el.firstElementChild.focus();
+             Spreadsheet.Cells["_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[col] + (row + 1)].el.firstElementChild.focus();
              event.preventDefault();
              return false;
            }
@@ -374,10 +386,10 @@ with (proxy) {
          });
          body.addEventListener('focusout', event => {
            highlight('');
-           conn.send(JSON.stringify({op: 'focusout', cell}));
+           Network.Send('focusout', {cell});
 
            const text = body.innerText;
-           edit(cell, text);
+           Spreadsheet.Edit(cell, text);
          });
          body.addEventListener('mouseenter', event => { tdMouseEnter(cell, td); });
 
@@ -397,11 +409,11 @@ with (proxy) {
        if (colOrCell.length === 1) {
          const col = colOrCell;
          for (let row = 1; row <= ROWS; row++) {
-           cells[col+row].el.classList.add('highlight');
+           Spreadsheet.Cells[col+row].el.classList.add('highlight');
          }
        } else if (colOrCell.length === 2) {
          const cell = colOrCell;
-         cells[cell].el.classList.add('highlight');
+         Spreadsheet.Cells[cell].el.classList.add('highlight');
        } else if (colOrCell.length >= 3) { throw new Error('invalid highlight'); }
      }
 
@@ -428,7 +440,7 @@ with (proxy) {
        const button = buttons[i];
        const reaction = button.firstElementChild.src.match('/([^/\.]+)\.png')[1];
        button.addEventListener('click', event => {
-         react(reactCell, reaction);
+         Spreadsheet.React(reactCell, reaction);
        });
      }
 
