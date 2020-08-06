@@ -8,6 +8,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"strings"
 )
 
 var addr = flag.String("addr", ":9391", "http service address")
@@ -15,7 +16,8 @@ var fs = http.FileServer(http.Dir("./static"))
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
-	if r.URL.Path != "/" {
+	if strings.HasPrefix(r.URL.Path, "/static/") {
+		r.URL.Path = strings.Replace(r.URL.Path, "/static/", "/", 1)
 		fs.ServeHTTP(w, r)
 		return
 	}

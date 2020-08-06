@@ -1,4 +1,4 @@
-# spreadsheet
+# reactions-spreadsheet
 
 [![reacts in spreadsheet](doc/banner.png)](https://twitter.com/rsnous/status/1266855824577593344)
 

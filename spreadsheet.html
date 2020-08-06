@@ -109,21 +109,24 @@
 
       <div style="display: none" id="react-chooser">
         <div>
-          <button><img alt="❤" src="reacts/01-heart.png"></button>
-          <button><img alt="😆" src="reacts/02-laugh.png"></button>
-          <button><img alt="😮" src="reacts/03-wow.png"></button>
-          <button><img alt="😢" src="reacts/04-sad.png"></button>
-          <button><img alt="😠" src="reacts/05-angery.png"></button>
-          <button><img alt="👍" src="reacts/06-thumbsup.png"></button>
-          <button><img alt="👎" src="reacts/07-thumbsdown.png"></button>
+          <button><img alt="❤" src="static/reacts/01-heart.png"></button>
+          <button><img alt="😆" src="static/reacts/02-laugh.png"></button>
+          <button><img alt="😮" src="static/reacts/03-wow.png"></button>
+          <button><img alt="😢" src="static/reacts/04-sad.png"></button>
+          <button><img alt="😠" src="static/reacts/05-angery.png"></button>
+          <button><img alt="👍" src="static/reacts/06-thumbsup.png"></button>
+          <button><img alt="👎" src="static/reacts/07-thumbsdown.png"></button>
         </div>
       </div>
 
       <div id="react-tooltip">React</div>
-      <img id="react-tooltip-arrow" src="reacts/arrow.png" width="8" height="4">
+      <img id="react-tooltip-arrow" src="static/reacts/arrow.png" width="8" height="4">
     </div>
 
     <script>
+     // let's make sure we know what spreadsheet we're on.
+     
+
      // spreadsheet engine
      Spreadsheet = {
        Cells: {},
@@ -133,6 +136,7 @@
 
          Object.defineProperty(this.Proxy, cell, {
            get: () => {
+             // FIXME: these `affects` relationships are never garbage-collected, so evaluation will get slower over time
              this.Cells[cell].affects[CurrentEvaluationCell] = true;
              const result = this.Cells[cell].result;
              if (result === '') return 0; else return result;
@@ -219,7 +223,7 @@ with (Spreadsheet.Proxy) {
            const fakeCursor = document.createElement('i');
 
            const fakeCursorImg = document.createElement('img');
-           fakeCursorImg.src = 'cursor@4x.png';
+           fakeCursorImg.src = 'static/cursor@4x.png';
            fakeCursorImg.width = 60/4; fakeCursorImg.height = 87/4;
            fakeCursorImg.style.filter = 'invert(1)';
            fakeCursorImg.style.mixBlendMode = 'darken';
@@ -342,7 +346,7 @@ with (Spreadsheet.Proxy) {
              const ri = document.createElement('img');
              ri.style.margin = '0 1px 0 1px';
              ri.style.height = '1em';
-             ri.src = 'reacts/'+reactions[i]+'.png';
+             ri.src = 'static/reacts/'+reactions[i]+'.png';
              r.appendChild(ri);
              rv.appendChild(r);
            }
