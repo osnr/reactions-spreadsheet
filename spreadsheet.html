@@ -124,9 +124,9 @@
     </div>
 
     <script>
-     // let's make sure we know what spreadsheet we're on.
+     // if they just go to /, make up a random spreadsheet id for them.
      if (window.location.pathname === '/') {
-       
+       window.history.replaceState('', '', '/' + Math.random().toString(36).substring(2, 15));
      }
 
      // spreadsheet engine
@@ -286,7 +286,6 @@ with (Spreadsheet.Proxy) {
      });
 
      // view layer
-
      const ROWS = 9;
      const COLS = 10;
      const table = document.createElement('table');
@@ -423,8 +422,7 @@ with (Spreadsheet.Proxy) {
        } else if (colOrCell.length >= 3) { throw new Error('invalid highlight'); }
      }
 
-     // react
-
+     // reactions
      let reactCell;
      let locked;
 
