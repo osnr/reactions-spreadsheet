@@ -125,7 +125,9 @@
 
     <script>
      // let's make sure we know what spreadsheet we're on.
-     
+     if (window.location.pathname === '/') {
+       
+     }
 
      // spreadsheet engine
      Spreadsheet = {
@@ -196,7 +198,7 @@ with (Spreadsheet.Proxy) {
      // networking/multiuser engine
      Network = {
        Connection: (function() {
-         const conn = new WebSocket("ws://" + document.location.host + "/ws");
+         const conn = new WebSocket("ws://" + window.location.host + "/ws?" + window.location.pathname);
          conn.onclose = function (evt) {
            alert("Connection closed.");
          };
@@ -234,7 +236,7 @@ with (Spreadsheet.Proxy) {
            fakeCursor.style.zIndex = '999';
            fakeCursor.style.position = 'absolute';
            fakeCursor.style.top = 0; fakeCursor.style.left = 0;
-           fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(cursor@4x.png)';
+           fakeCursor.style.maskImage = fakeCursor.style.webkitMaskImage = 'url(static/cursor@4x.png)';
            fakeCursor.style.maskSize = fakeCursor.style.webkitMaskSize = `${60/4}px ${87/4}px`;
            document.body.appendChild(fakeCursor);
 

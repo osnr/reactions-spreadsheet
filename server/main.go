@@ -14,8 +14,8 @@ import (
 var addr = flag.String("addr", ":9391", "http service address")
 var fs = http.FileServer(http.Dir("./static"))
 
-func serveHome(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL)
+func serve(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.RemoteAddr, r.URL)
 	if strings.HasPrefix(r.URL.Path, "/static/") {
 		r.URL.Path = strings.Replace(r.URL.Path, "/static/", "/", 1)
 		fs.ServeHTTP(w, r)
@@ -25,17 +25,24 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	// any /whatever, /blahblah, /etc URL is a spreadsheet.
 	http.ServeFile(w, r, "spreadsheet.html")
 }
 
 func main() {
 	flag.Parse()
-	hub := newHub()
-	go hub.run()
 
-	http.HandleFunc("/", serveHome)
+	hubs := make(map[string]*Hub)
+
+	http.HandleFunc("/", serve)
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		hub := hubs[r.URL.RawQuery]
+		if hub == nil {
+			hub = newHub()
+			go hub.run()
+			hubs[r.URL.RawQuery] = hub
+		}
 		serveWs(hub, w, r)
 	})
 	err := http.ListenAndServe(*addr, nil)
