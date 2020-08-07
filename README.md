@@ -6,10 +6,12 @@
 
 i am [making a
 spreadsheet.](https://twitter.com/rsnous/status/1262599431456567296)
-you can use it online with multiple people and react to things. 
+you can use it online with multiple people and [react to things](https://twitter.com/rsnous/status/1259534592316370952). 
 
 (... you might argue that it's really a chat app pretending to be a
 spreadsheet ...)
+
+[![wish u could emoji react to spreadsheet cells](doc/wish-u-could-emoji-react.png)](https://twitter.com/rsnous/status/1259534592316370952)
 
 formulas are `=A1 + A2` or `=alert('hi!')` or `=whatever arbitrary JS
 you want`
@@ -30,19 +32,25 @@ no other source code files, and there are no external libraries.)
 
 The server is based on a Go WebSocket chat example and is
 intentionally boring; it just relays messages ('cell was edited',
-'mouse was moved', etc) from each client to all other clients. It has
-no idea what a 'spreadsheet' is. (I've been running it on my laptop
-and giving people my IP address to play with the spreadsheet.)
+'mouse was moved', etc) from each client to all other clients on the
+same spreadsheet URL. It has no idea what a 'spreadsheet' is. (~~I've
+been running it on my laptop and giving people my IP address to play
+with the spreadsheet.~~ It now runs on a [Raspberry
+Pi](https://twitter.com/rsnous/status/1291169247239065609) that lives
+[under my
+desk](https://twitter.com/rsnous/status/1262140583755132929).)
 
 ## How to run
 
-(I'm not hosting a public server right now)
+Try [spreadsheet.omar.website](https://spreadsheet.omar.website).
+
+### Or run it yourself
 
 <!--
 - flash Pi OS Lite onto SD card, boot w/ display and kbd
 - raspi-config -> set hostname, enable ssh under interfacing options, 
   change pw
-- router -> forward :9391 -> :80 (or use ssl-proxy)
+- router -> forward :9391 -> :80 (or use ssl-proxy + http redirect option)
 ...
 $ sudo apt-get install git golang
 $ git clone [...]
@@ -91,7 +99,7 @@ would be nice to have (mundane):
 - actually figure out good cell sizing behavior
 - clean/organize CSS crap out of JavaScript. maybe write a CSS syntax
   helper
-- more keyboard shortcuts? arrow keys etc
+- more keyboard shortcuts? ~~arrow keys~~ etc
 - relative refs?
 - ??? not sure -- (opt-in?) persistence? server (or a 'bot' client?)
   can replay events to new joiners? clients can import/export files
@@ -103,10 +111,14 @@ random:
 might as well be plain inputs at this rate
 
 things I prefer not to do:
-- obvious Google Docs-style persistence where each spreadsheet is
-  a 'file' that lives at a random URL and you link people to it. i
-  really like the synchronous quality that we have right now, where
-  everyone has to be on at once. like old AIM chats
+- obvious Google Docs-style persistence where each spreadsheet is a
+  'file' ~~that lives at a random URL and you link people to it.~~
+  (edit: I implemented the random-URL thing, so there isn't one global
+  spreadsheet where strangers can run arbitrary JS in your browser,
+  just so I'd feel comfortable hosting a public instance. although I
+  still haven't given in to making them persistent) i really like the
+  synchronous quality that we have right now, where everyone has to be
+  on at once. like old AIM chats
 - encapsulate state of the different modules. i like having everything
   available from global scope so i can poke at it from the console
   (and from cell formulas!)
@@ -123,17 +135,17 @@ things I prefer not to do:
   of cells; i think it's a lot of why this feels like a chat. nobody
   sees what you type until you hit Enter
 - make the server smarter. should make bots to do that stuff instead!
-- run on some public server. I don't want to be a sysadmin and mess
+- ~~run on some public server. I don't want to be a sysadmin and mess
   with Linux and ports, I don't want to deal with some cloud provider
   management console, I have no interest in securing the server, and I
-  don't want to be responsible for people's documents
-  - (and I don't want to deal with some deployment process to push
-    changes from my laptop to this hypothetical server)
-  - at most, I could be convinced [to
+  don't want to be responsible for people's documents~~
+  - ~~(and I don't want to deal with some deployment process to push
+    changes from my laptop to this hypothetical server)~~
+  - ~~at most, I could be convinced [to
     use](https://twitter.com/rsnous/status/1263321390163189760) a
     Raspberry Pi on a
     [shelf](https://twitter.com/rsnous/status/1262140583755132929) in
-    my apartment as the server
+    my apartment as the server~~ **done!**
 - have more than 1 source file
 - tests
 
@@ -146,6 +158,7 @@ things I **definitely** **don't** want to do:
   processes!!! (database, whatever) (at most, maybe I'd allow SQLite
   or something for persistence)
 
-this project is a fun toy for experimenting with spreadsheet. it's not
-meant to be useful for anything or anyone in particular. i will not
-make changes to it that make it less fun :-)
+this project is a fun toy for [experimenting with
+spreadsheet](https://twitter.com/rsnous/status/1291040468680114177). it's
+not meant to be useful for anything or anyone in particular. i will
+not make changes to it that make it less fun :-)
