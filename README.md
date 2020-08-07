@@ -38,6 +38,21 @@ and giving people my IP address to play with the spreadsheet.)
 
 (I'm not hosting a public server right now)
 
+<!--
+- flash Pi OS Lite onto SD card, boot w/ display and kbd
+- raspi-config -> set hostname, enable ssh under interfacing options, 
+  change pw
+- router -> forward :9391 -> :80 (or use ssl-proxy)
+...
+$ sudo apt-get install git golang
+$ git clone [...]
+$ cd reactions-spreadsheet
+-->
+
+Install the one dependency of the server: `$ go get github.com/gorilla/websocket`
+
+Then:
+
 ```
 $ make
 ```

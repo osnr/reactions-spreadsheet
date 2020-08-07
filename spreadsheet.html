@@ -198,7 +198,8 @@ with (Spreadsheet.Proxy) {
      // networking/multiuser engine
      Network = {
        Connection: (function() {
-         const conn = new WebSocket("ws://" + window.location.host + "/ws?" + window.location.pathname);
+         const l = window.location;
+         const conn = new WebSocket(((l.protocol === "https:") ? "wss://" : "ws://") + l.host + "/ws?" + l.pathname);
          conn.onclose = function (evt) {
            alert("Connection closed.");
          };
