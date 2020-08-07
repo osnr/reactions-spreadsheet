@@ -361,13 +361,17 @@ with (Spreadsheet.Proxy) {
            rv.appendChild(rcount);
          });
 
+         let hcol = col, hrow = row;
+
          body.addEventListener('focusin', event => {
            Network.Send('focusin', {cell});
+           hcol = col; hrow = row;
 
            if (Spreadsheet.Cells[cell].program) {
              body.innerText = Spreadsheet.Cells[cell].program;
            }
          });
+
          body.addEventListener('keydown', event => {
            if (event.key !== 'Shift') { highlight(''); }
            if (event.key === 'Enter' && !event.shiftKey) {
@@ -378,16 +382,26 @@ with (Spreadsheet.Proxy) {
 
            const text = body.innerText;
            if (text[0] === '=') {
-             const prev = text[window.getSelection().anchorOffset - 1];
-             if (event.key.length === 1 && event.key >= 'A' && event.key <= 'Z' && prev.match(/[^\w]/)) {
-               highlight(event.key);
-             } else if (event.key.length === 1 && event.key >= '1' && event.key <= '9' && prev.match(/[A-Z]/)) {
-               highlight(prev + event.key);
-             } else if (event.key === 'ArrowLeft') { // FIXME: get neighbor
-             } else if (event.key === 'ArrowRight') {
-             } else if (event.key === 'ArrowUp') {
-             } else if (event.key === 'ArrowDown') {
-             }
+             const anchor = window.getSelection().anchorOffset;
+             const before = text.substring(0, anchor); const after = text.substring(anchor);
+             if (event.key.length === 1 && event.key >= 'A' && event.key <= 'Z' && before.match(/[^\w]$/)) {
+               highlight(event.key); return;
+             } else if (event.key.length === 1 && event.key >= '1' && event.key <= '9' && before.match(/[A-Z]$/)) {
+               highlight(before.substr(-1) + event.key); return;
+
+             } else if (event.key === 'ArrowLeft') { hcol = Math.max(0, hcol-1);
+             } else if (event.key === 'ArrowRight') { hcol = Math.min(COLS, hcol+1);
+             } else if (event.key === 'ArrowUp') { hrow = Math.max(0, hrow-1);
+             } else if (event.key === 'ArrowDown') { hrow = Math.min(ROWS, hrow+1);
+             } else { return; }
+
+             const cell = "_ABCDEFGHIJKLMNOPQRSTUVWXYZ"[hcol] + hrow;
+             highlight(cell);
+             newBefore = before.replace(/[A-Z][1-9]$/, '');
+             body.innerText = newBefore + cell + after;
+             window.getSelection().collapse(body.lastChild, newBefore.length + cell.length);
+             event.preventDefault();
+             return false;
            }
          });
          body.addEventListener('focusout', event => {
